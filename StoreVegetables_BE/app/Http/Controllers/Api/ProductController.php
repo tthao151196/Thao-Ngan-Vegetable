@@ -61,7 +61,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::with('brand:id,name') // ✅ eager-load brand
-            ->select(['id','name','brand_id','price_sale as price','thumbnail'])
+->select(['id','name','brand_id','price_sale as price','thumbnail'])
             ->latest('id')
             ->get();
 
@@ -92,6 +92,29 @@ class ProductController extends Controller
 
         return $items->makeHidden(['brand','brand_id']);
     }
+
+
+
+
+    public function adminIndex()
+{
+    $products = Product::with('brand:id,name')
+        ->select([
+            'id',
+            'name',
+            'slug',
+            'brand_id',
+            'price_root',
+            'price_sale',
+            'qty',
+            'thumbnail'
+        ])
+        ->latest('id')
+        ->get();
+
+    return $products->makeHidden(['brand','brand_id']);
+}
+
 }
 
 

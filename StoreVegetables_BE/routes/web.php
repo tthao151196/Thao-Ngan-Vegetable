@@ -11,3 +11,9 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{id}', [CategoryController::class, 'show']);
 Route::get('/categories/{id}/products', [CategoryController::class, 'products']);
 Route::get('/categories/{id}/products', [ProductController::class, 'byCategory']);
+
+
+// routes/api.php
+Route::prefix('admin')->group(function () {
+    Route::get('/products', [ProductController::class, 'adminIndex']);
+});
