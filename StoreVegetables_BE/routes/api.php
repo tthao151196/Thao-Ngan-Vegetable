@@ -8,8 +8,6 @@ use App\Http\Controllers\Api\AuthController;
 // ===== Auth =====
 
 
-Route::view('/', 'welcome');
-
 Route::post('/register', [AuthController::class, 'register']);
 
 

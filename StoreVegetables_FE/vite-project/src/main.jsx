@@ -10,8 +10,9 @@ import Products from "./pages/Customers/Products";
 import Cart from "./pages/Customers/Cart";
 import ProductDetail from "./pages/Customers/ProductDetail";
 import CategoryProducts from "./pages/Customers/CategoryProducts";
+import Register from "./pages/Customers/Register"; // <-- THÊM
 
-// ===== Admin pages/layout (nếu chưa có, có thể comment các import/route này) =====
+// ===== Admin pages/layout =====
 import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
 import AdminProducts from "./pages/Admin/Products";
@@ -29,6 +30,7 @@ function Layout({ children }) {
           <NavLink to="/" end>Trang chủ</NavLink>
           <NavLink to="/products">Sản phẩm</NavLink>
           <NavLink to="/cart">Giỏ hàng</NavLink>
+          <NavLink to="/register">Đăng ký</NavLink> {/* <-- THÊM */}
         </nav>
       </header>
 
@@ -61,14 +63,15 @@ function App() {
         <Route path="/products" element={<Layout><Products addToCart={addToCart} /></Layout>} />
         {/* Xem sản phẩm theo danh mục */}
         <Route path="/category/:id" element={<Layout><CategoryProducts addToCart={addToCart} /></Layout>} />
-        {/* Alias: /categories/:id cũng trỏ về cùng trang */}
         <Route path="/categories/:id" element={<Navigate to="/category/:id" replace />} />
         {/* Chi tiết sản phẩm */}
         <Route path="/products/:id" element={<Layout><ProductDetail addToCart={addToCart} /></Layout>} />
         {/* Giỏ hàng */}
         <Route path="/cart" element={<Layout><Cart cart={cart} /></Layout>} />
+        {/* Đăng ký */}
+        <Route path="/register" element={<Layout><Register /></Layout>} /> {/* <-- THÊM */}
 
-        {/* ====== Admin routes (cần AdminLayout có <Outlet />) ====== */}
+        {/* ====== Admin routes ====== */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />

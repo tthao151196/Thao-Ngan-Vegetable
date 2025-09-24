@@ -75,6 +75,28 @@ export default function Home() {
         <p style={{ fontSize: 18, color: "#4caf50" }}>
           Nơi cung cấp rau củ quả tươi sạch từ nông trại đến bàn ăn
         </p>
+
+        {/* === NÚT ĐĂNG KÝ (THÊM MỚI) ===
+        <div style={{ marginTop: 16, textAlign: "center" }}>
+          <button
+            type="button"
+            onClick={() => navigate("/register")}
+            style={{
+              background: "#388e3c",
+              color: "#fff",
+              border: "none",
+              padding: "10px 16px",
+              borderRadius: 10,
+              cursor: "pointer",
+              fontWeight: 600,
+              boxShadow: "0 2px 8px rgba(56,142,60,0.25)",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.9")}
+            onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
+          >
+            Đăng ký
+          </button>
+        </div> */}
       </section>
 
       {/* Danh mục nổi bật */}
@@ -172,13 +194,12 @@ export default function Home() {
                 justifyContent: "center",
               }}
             >
-              {newItems.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  p={{ ...p, image: p.image_url || PLACEHOLDER }}
-                  
-                />
-              ))}
+                {newItems.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    p={{ ...p, image: p.image_url || PLACEHOLDER }}
+                  />
+                ))}
             </div>
           </section>
 
@@ -196,13 +217,12 @@ export default function Home() {
                 justifyContent: "center",
               }}
             >
-              {saleItems.map((p) => (
-                <ProductCard
-                  key={p.id}
-                  p={{ ...p, image: p.image_url || PLACEHOLDER }}
-                  
-                />
-              ))}
+                {saleItems.map((p) => (
+                  <ProductCard
+                    key={p.id}
+                    p={{ ...p, image: p.image_url || PLACEHOLDER }}
+                  />
+                ))}
             </div>
           </section>
         </>

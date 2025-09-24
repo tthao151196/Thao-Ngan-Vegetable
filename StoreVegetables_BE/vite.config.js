@@ -1,13 +1,18 @@
-import { defineConfig } from 'vite';
-import laravel from 'laravel-vite-plugin';
-import tailwindcss from '@tailwindcss/vite';
+// vite-project/vite.config.js
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-    plugins: [
-        laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
-            refresh: true,
-        }),
-        tailwindcss(),
-    ],
+  plugins: [react()],
+  server: {
+    proxy: {
+      // FE gọi /api/... -> proxy sang Apache:
+      // http://127.0.0.1/ungthithanhthao/public/api/...
+      "/api": {
+        target: "http://127.0.0.1",
+        changeOrigin: true,
+        rewrite: (p) => p.replace(/^\/api/, "/ungthithanhthao/public/api"),
+      },
+    },
+  },
 });
