@@ -1,52 +1,79 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-const API_BASE = "http://127.0.0.1:8000"; // Laravel API
+const API_BASE = "http://127.0.0.1:8000/api"; // Laravel API
 
 export default function Products() {
   const [items, setItems] = useState([]);
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const navigate = useNavigate();
 
-  // Lấy sản phẩm từ API (admin)
+  // Lấy danh sách sản phẩm
   useEffect(() => {
     const ac = new AbortController();
-
     (async () => {
       try {
         setLoading(true);
         setErr("");
 
-        const res = await fetch(`${API_BASE}/admin/products`, { signal: ac.signal });
+        const res = await fetch(`${API_BASE}/admin/products`, {
+          signal: ac.signal,
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.data ?? [];
         setItems(list);
       } catch (e) {
-        if (e.name !== "AbortError") setErr("Không tải được danh sách sản phẩm.");
+        if (e.name !== "AbortError")
+          setErr("Không tải được danh sách sản phẩm.");
       } finally {
         setLoading(false);
       }
     })();
-
     return () => ac.abort();
   }, []);
 
-  // Filter theo tên hoặc slug
+  // Xóa sản phẩm
+  const handleDelete = async (id) => {
+    if (!window.confirm("Bạn có chắc muốn xoá sản phẩm này?")) return;
+
+    try {
+      const res = await fetch(`${API_BASE}/admin/products/${id}`, {
+        method: "DELETE",
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      setItems((prev) => prev.filter((x) => x.id !== id));
+      alert("✅ Đã xoá sản phẩm");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Không xoá được sản phẩm");
+    }
+  };
+
+  // Filter
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return items;
     return items.filter(
       (x) =>
-        x.name.toLowerCase().includes(s) ||
-        x.slug?.toLowerCase().includes(s)
+        x.name.toLowerCase().includes(s) || x.slug?.toLowerCase().includes(s)
     );
   }, [q, items]);
 
   return (
     <section style={{ padding: 20 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 10,
+        }}
+      >
         <h1 style={{ fontSize: 24 }}>Quản lý sản phẩm</h1>
         <div style={{ display: "flex", gap: 8 }}>
           <input
@@ -61,7 +88,7 @@ export default function Products() {
             }}
           />
           <button
-            onClick={() => alert("TODO: mở form tạo sản phẩm")}
+            onClick={() => navigate("/admin/products/add")}
             style={{
               padding: "8px 12px",
               borderRadius: 8,
@@ -81,7 +108,11 @@ export default function Products() {
 
       {!loading && (
         <div style={{ overflowX: "auto", marginTop: 12 }}>
-          <table width="100%" cellPadding={8} style={{ borderCollapse: "collapse", background: "#fff" }}>
+          <table
+            width="100%"
+            cellPadding={8}
+            style={{ borderCollapse: "collapse", background: "#fff" }}
+          >
             <thead>
               <tr style={{ background: "#fafafa" }}>
                 <th align="left">ID</th>
@@ -100,17 +131,18 @@ export default function Products() {
                   <td>{p.id}</td>
                   <td>{p.name}</td>
                   <td>{p.slug}</td>
-
-                  {/* Giá gốc */}
-                  <td align="right">₫{(p.price_root || 0).toLocaleString("vi-VN")}</td>
-
-                  {/* Giá sale */}
-                  <td align="right">₫{(p.price_sale || 0).toLocaleString("vi-VN")}</td>
-
+                  <td align="right">
+                    ₫{(p.price_root || 0).toLocaleString("vi-VN")}
+                  </td>
+                  <td align="right">
+                    ₫{(p.price_sale || 0).toLocaleString("vi-VN")}
+                  </td>
                   <td align="right">{p.qty}</td>
                   <td align="center">
                     <img
-                      src={p.thumbnail_url || `${API_BASE}/storage/${p.thumbnail}`}
+                      src={
+                        p.thumbnail_url || `${API_BASE}/storage/${p.thumbnail}`
+                      }
                       alt={p.name}
                       style={{
                         width: 60,
@@ -122,7 +154,7 @@ export default function Products() {
                   </td>
                   <td align="center">
                     <button
-                      onClick={() => alert("Edit " + p.id)}
+                      onClick={() => navigate(`/admin/products/${p.id}/edit`)}
                       style={{
                         padding: "4px 10px",
                         marginRight: 4,
@@ -136,7 +168,7 @@ export default function Products() {
                       Sửa
                     </button>
                     <button
-                      onClick={() => setItems(items.filter((x) => x.id !== p.id))}
+                      onClick={() => handleDelete(p.id)}
                       style={{
                         padding: "4px 10px",
                         background: "#c62828",
@@ -153,7 +185,11 @@ export default function Products() {
               ))}
               {!filtered.length && (
                 <tr>
-                  <td colSpan={8} align="center" style={{ padding: 18, color: "#777" }}>
+                  <td
+                    colSpan={8}
+                    align="center"
+                    style={{ padding: 18, color: "#777" }}
+                  >
                     Không có dữ liệu
                   </td>
                 </tr>

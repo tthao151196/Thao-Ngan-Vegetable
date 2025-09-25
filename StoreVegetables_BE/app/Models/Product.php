@@ -65,7 +65,7 @@ class Product extends Model
     public $timestamps = true;
 
     protected $fillable = [
-        'category_id','brand_id','name','slug','price_root','price_sale',
+        'category_id','name','slug','price_root','price_sale',
         'thumbnail','qty','detail','description','status',
     ];
 
@@ -77,11 +77,7 @@ class Product extends Model
     // ✅ Thuộc tính ảo để FE dùng trực tiếp
     protected $appends = ['thumbnail_url','brand_name'];
 
-    public function brand()
-    {
-        return $this->belongsTo(Brand::class, 'brand_id');
-    }
-
+  
     public function getBrandNameAttribute()
     {
         return optional($this->brand)->name; // "Nike", "Levis", ...

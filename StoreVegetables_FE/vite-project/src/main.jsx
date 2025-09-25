@@ -1,5 +1,5 @@
 // src/main.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import "./index.css";
@@ -10,27 +10,85 @@ import Products from "./pages/Customers/Products";
 import Cart from "./pages/Customers/Cart";
 import ProductDetail from "./pages/Customers/ProductDetail";
 import CategoryProducts from "./pages/Customers/CategoryProducts";
-import Register from "./pages/Customers/Register"; // <-- THÊM
+import Register from "./pages/Customers/Register";
+import Login from "./pages/Customers/Login";
+import Checkout from "./pages/Customers/Checkout";
 
 // ===== Admin pages/layout =====
 import AdminLayout from "./layouts/AdminLayout";
 import Dashboard from "./pages/Admin/Dashboard";
-import AdminProducts from "./pages/Admin/Products";
-import AdminCategories from "./pages/Admin/Categories";
-import AdminOrders from "./pages/Admin/Orders";
-import AdminUsers from "./pages/Admin/Users";
+import AdminProducts from "./pages/Admin/Product/Products";
+import AdminCategories from "./pages/Admin/Category/Categories";
+import AdminOrders from "./pages/Admin/Order/Orders";
+import AdminUsers from "./pages/Admin/User/Users";
+import AddProduct from "./pages/Admin/Product/AddProduct"; // ✅ thêm import
+import EditProduct from "./pages/Admin/Product/EditProduct"; // ✅ thêm import
+
+
+// ---- Hàm logout (gọi API + xoá localStorage) ----
+const handleLogout = async () => {
+  const token = localStorage.getItem("token");
+
+  try {
+    if (token) {
+      const res = await fetch("http://127.0.0.1:8000/api/logout", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      await res.json().catch(() => ({})); // ignore lỗi JSON
+    }
+  } catch (err) {
+    console.error("Logout failed:", err);
+  } finally {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    window.location.href = "/login"; // chuyển về login
+  }
+};
 
 // ---- Layout cho phần khách hàng ----
 function Layout({ children }) {
+  const user = JSON.parse(localStorage.getItem("user") || "null");
+
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-4 py-3 border-b flex items-center justify-between">
         <div className="font-semibold">🍃 StoreVegetables</div>
-        <nav className="flex gap-4">
+        <nav className="flex gap-4 items-center">
           <NavLink to="/" end>Trang chủ</NavLink>
           <NavLink to="/products">Sản phẩm</NavLink>
           <NavLink to="/cart">Giỏ hàng</NavLink>
-          <NavLink to="/register">Đăng ký</NavLink> {/* <-- THÊM */}
+
+          {user ? (
+            <>
+              <span style={{ color: "green", fontWeight: 600 }}>
+                👋 Xin chào, {user.name}
+              </span>
+              <button
+                onClick={handleLogout}
+                style={{
+                  marginLeft: 12,
+                  background: "#d32f2f",
+                  color: "#fff",
+                  border: 0,
+                  borderRadius: 8,
+                  padding: "6px 10px",
+                  cursor: "pointer",
+                }}
+              >
+                Đăng xuất
+              </button>
+            </>
+          ) : (
+            <>
+              <NavLink to="/register">Đăng ký</NavLink>
+              <NavLink to="/login">Đăng nhập</NavLink>
+            </>
+          )}
         </nav>
       </header>
 
@@ -44,15 +102,28 @@ function Layout({ children }) {
 }
 
 function App() {
-  const [cart, setCart] = useState([]);
+  // ✅ Lấy giỏ hàng từ localStorage khi khởi tạo
+  const [cart, setCart] = useState(() => {
+    const saved = localStorage.getItem("cart");
+    return saved ? JSON.parse(saved) : [];
+  });
 
+  // ✅ Mỗi lần cart thay đổi thì lưu lại vào localStorage
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(cart));
+  }, [cart]);
+
+  // ✅ Hàm thêm sản phẩm
   const addToCart = (product) => {
     setCart((prev) => {
       const exists = prev.find((i) => i.id === product.id);
       return exists
-        ? prev.map((i) => (i.id === product.id ? { ...i, qty: i.qty + 1 } : i))
+        ? prev.map((i) =>
+            i.id === product.id ? { ...i, qty: i.qty + 1 } : i
+          )
         : [...prev, { ...product, qty: 1 }];
     });
+    alert("🎉 Sản phẩm đã được thêm vào giỏ hàng!");
   };
 
   return (
@@ -61,20 +132,20 @@ function App() {
         {/* ====== Customer routes ====== */}
         <Route path="/" element={<Layout><Home /></Layout>} />
         <Route path="/products" element={<Layout><Products addToCart={addToCart} /></Layout>} />
-        {/* Xem sản phẩm theo danh mục */}
         <Route path="/category/:id" element={<Layout><CategoryProducts addToCart={addToCart} /></Layout>} />
         <Route path="/categories/:id" element={<Navigate to="/category/:id" replace />} />
-        {/* Chi tiết sản phẩm */}
         <Route path="/products/:id" element={<Layout><ProductDetail addToCart={addToCart} /></Layout>} />
-        {/* Giỏ hàng */}
-        <Route path="/cart" element={<Layout><Cart cart={cart} /></Layout>} />
-        {/* Đăng ký */}
-        <Route path="/register" element={<Layout><Register /></Layout>} /> {/* <-- THÊM */}
+        <Route path="/checkout" element={<Layout><Checkout cart={cart} setCart={setCart} /></Layout>} />
+        <Route path="/cart" element={<Layout><Cart cart={cart} setCart={setCart} /></Layout>} />
+        <Route path="/register" element={<Layout><Register /></Layout>} />
+        <Route path="/login" element={<Layout><Login /></Layout>} />
 
-        {/* ====== Admin routes ====== */}
+       {/* ====== Admin routes ====== */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="products" element={<AdminProducts />} />
+          <Route path="products/add" element={<AddProduct />} />
+          <Route path="products/:id/edit" element={<EditProduct />} /> {/* ✅ thêm route EditProduct */}
           <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />

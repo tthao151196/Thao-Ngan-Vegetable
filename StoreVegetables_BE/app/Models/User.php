@@ -1,31 +1,42 @@
 <?php
 
-// app/Models/User.php
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\HasApiTokens;   // ✅ thêm dòng này
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable;  // ✅ thêm HasApiTokens
 
-    protected $table = 'uttt_user';
-    protected $primaryKey = 'id';
-    public $timestamps = true; // bảng có created_at/updated_at
+    protected $table = 'uttt_user';  // ✅ bảng của bạn
 
     protected $fillable = [
-        'name','email','password','phone',
-        'username','address','avatar','roles',
-        'created_by','updated_by','status',
+        'name',
+        'email',
+        'password',
+        'phone',
+        'username',
+        'address',
+        'avatar',
+        'roles',
+        'status',
+        'created_by',
     ];
 
-    protected $hidden = ['password','remember_token'];
-
-    protected $casts = [
-        'password' => 'hashed',
-        'email_verified_at' => 'datetime',
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
+
+    // Nếu bạn set password cast trong model (Laravel 10+)
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',   // ✅ để tự hash khi create/update
+        ];
+    }
 }

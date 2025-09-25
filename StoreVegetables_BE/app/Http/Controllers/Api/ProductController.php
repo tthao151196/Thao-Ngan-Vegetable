@@ -1,120 +1,149 @@
 <?php
 
-// namespace App\Http\Controllers\Api;
-
-// use App\Http\Controllers\Controller;
-// use App\Models\Product;
-
-// class ProductController extends Controller
-// {
-//     // Lấy tất cả sản phẩm
-//     public function index()
-//     {
-//         return Product::select([
-//             'id',
-//             'name',
-//             'brand_id as brand',    // tạm trả brand_id, sau join bảng brand sẽ lấy tên
-//             'price_sale as price',
-//             'thumbnail',
-//         ])->latest('id')->get();
-//     }
-
-//     // Lấy chi tiết sản phẩm theo id
-//     public function show($id)
-//     {
-//         $product = Product::select([
-//             'id',
-//             'name',
-//             'brand_id as brand',
-//             'price_sale as price',
-//             'thumbnail',
-//             'detail',
-//             'description',
-//         ])->find($id);
-
-//         if (!$product) {
-//             return response()->json(['message' => 'Not found'], 404);
-//         }
-
-//         return $product;
-//     }
-
-//     //danh mục sản phẩm
-// public function byCategory($id)
-// {
-//     return Product::where('category_id', $id)->get();
-// }
-
-
-// }
-
-
-
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
-    // Danh sách sản phẩm
+    // ====== Cho khách ======
+
+    // Danh sách sản phẩm (có phân trang)
     public function index()
     {
-        $products = Product::with('brand:id,name') // ✅ eager-load brand
-->select(['id','name','brand_id','price_sale as price','thumbnail'])
+        return Product::select(['id','name','price_sale as price','thumbnail'])
             ->latest('id')
-            ->get();
-
-        // Ẩn quan hệ thô, FE dùng brand_name & thumbnail_url
-        return $products->makeHidden(['brand','brand_id']);
+            ->paginate(12);
     }
 
     // Chi tiết sản phẩm
     public function show($id)
     {
-        $p = Product::with('brand:id,name')
-            ->select(['id','name','brand_id','price_sale as price','thumbnail','detail','description','category_id',])
+        $product = Product::select([
+                'id',
+                'name',
+                'price_sale as price',
+                'thumbnail',
+                'detail',
+                'description',
+                'category_id',
+            ])
             ->find($id);
 
-        if (!$p) return response()->json(['message' => 'Not found'], 404);
+        if (!$product) {
+            return response()->json(['message' => 'Not found'], 404);
+        }
 
-        return $p->makeHidden(['brand','brand_id']);
+        return $product;
     }
 
-    // Tất cả sản phẩm thuộc 1 danh mục
+    // Sản phẩm theo danh mục
     public function byCategory($id)
     {
-        $items = Product::with('brand:id,name')
-            ->where('category_id', $id)
-            ->select(['id','name','brand_id','price_sale as price','thumbnail'])
+        return Product::where('category_id', $id)
+            ->select(['id','name','price_sale as price','thumbnail'])
             ->latest('id')
-            ->get();
-
-        return $items->makeHidden(['brand','brand_id']);
+            ->paginate(12);
     }
 
+    // ====== Cho admin ======
 
-
-
+    // Danh sách sản phẩm (có phân trang)
     public function adminIndex()
-{
-    $products = Product::with('brand:id,name')
-        ->select([
-            'id',
-            'name',
-            'slug',
-            'brand_id',
-            'price_root',
-            'price_sale',
-            'qty',
-            'thumbnail'
-        ])
-        ->latest('id')
-        ->get();
+    {
+        return Product::select([
+                'id',
+                'name',
+                'slug',
+                'price_root',
+                'price_sale',
+                'qty',
+                'thumbnail'
+            ])
+            ->latest('id')
+            ->paginate(10);
+    }
 
-    return $products->makeHidden(['brand','brand_id']);
+    // Thêm sản phẩm
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name'       => 'required|string|max:255',
+            'slug'       => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique((new Product)->getTable(), 'slug'),
+            ],
+            'price_root' => 'required|numeric|min:0',
+            'price_sale' => 'nullable|numeric|min:0',
+            'qty'        => 'required|integer|min:0',
+            'thumbnail'  => 'nullable|image|max:2048',
+        ]);
+
+        $data = $request->only([
+            'name','slug','price_root','price_sale','qty','category_id','detail','description'
+        ]);
+
+        if ($request->hasFile('thumbnail')) {
+            $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
+        }
+
+        $product = Product::create($data);
+
+        return response()->json($product, 201);
+    }
+
+    // Cập nhật sản phẩm
+    public function update(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $request->validate([
+            'name'       => 'required|string|max:255',
+            'slug'       => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique((new Product)->getTable(), 'slug')->ignore($id),
+            ],
+            'price_root' => 'required|numeric|min:0',
+            'price_sale' => 'nullable|numeric|min:0',
+            'qty'        => 'required|integer|min:0',
+            'thumbnail'  => 'nullable|image|max:2048',
+        ]);
+
+        $data = $request->only([
+            'name','slug','price_root','price_sale','qty','category_id','detail','description'
+        ]);
+
+        if ($request->hasFile('thumbnail')) {
+            if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+                Storage::disk('public')->delete($product->thumbnail);
+            }
+            $data['thumbnail'] = $request->file('thumbnail')->store('products', 'public');
+        }
+
+        $product->update($data);
+
+        return response()->json($product);
+    }
+
+    // Xoá sản phẩm
+    public function destroy($id)
+    {
+        $product = Product::findOrFail($id);
+
+        if ($product->thumbnail && Storage::disk('public')->exists($product->thumbnail)) {
+            Storage::disk('public')->delete($product->thumbnail);
+        }
+
+        $product->delete();
+
+        return response()->json(['message' => 'Đã xoá sản phẩm']);
+    }
 }
-
-}
-
-

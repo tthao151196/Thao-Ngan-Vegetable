@@ -50,10 +50,12 @@ export default function Register() {
       let data = {};
       try { data = await res.json(); } catch {}
 
-      if (res.ok) {
-        navigate("/"); // hoặc /login
-        return;
-      }
+
+      // chuyen qua login
+     if (res.ok) {
+  navigate("/login"); // ✅ chuyển thẳng sang trang login
+  return;
+}
 
       if (res.status === 422 && data?.errors) {
         setErrors(data.errors);
