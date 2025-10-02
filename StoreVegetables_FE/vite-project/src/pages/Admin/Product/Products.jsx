@@ -10,7 +10,7 @@ export default function Products() {
   const [err, setErr] = useState("");
   const navigate = useNavigate();
 
-  // Lấy danh sách sản phẩm
+  // ===== Lấy danh sách sản phẩm (adminIndex) =====
   useEffect(() => {
     const ac = new AbortController();
     (async () => {
@@ -18,16 +18,24 @@ export default function Products() {
         setLoading(true);
         setErr("");
 
+        const token = localStorage.getItem("token"); // ✅ lấy token đã lưu khi login
         const res = await fetch(`${API_BASE}/admin/products`, {
           signal: ac.signal,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+          },
         });
+
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const list = Array.isArray(data) ? data : data.data ?? [];
         setItems(list);
       } catch (e) {
-        if (e.name !== "AbortError")
+        if (e.name !== "AbortError") {
+          console.error(e);
           setErr("Không tải được danh sách sản phẩm.");
+        }
       } finally {
         setLoading(false);
       }
@@ -35,14 +43,18 @@ export default function Products() {
     return () => ac.abort();
   }, []);
 
-  // Xóa sản phẩm
+  // ===== Xóa sản phẩm =====
   const handleDelete = async (id) => {
     if (!window.confirm("Bạn có chắc muốn xoá sản phẩm này?")) return;
 
     try {
+      const token = localStorage.getItem("token");
       const res = await fetch(`${API_BASE}/admin/products/${id}`, {
         method: "DELETE",
-        headers: { Accept: "application/json" },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          Accept: "application/json",
+        },
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -54,7 +66,7 @@ export default function Products() {
     }
   };
 
-  // Filter
+  // ===== Lọc tìm kiếm =====
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return items;
@@ -64,8 +76,10 @@ export default function Products() {
     );
   }, [q, items]);
 
+  // ===== Render =====
   return (
     <section style={{ padding: 20 }}>
+      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -103,9 +117,11 @@ export default function Products() {
         </div>
       </div>
 
+      {/* Loading / Error */}
       {loading && <p>Đang tải dữ liệu…</p>}
       {err && <p style={{ color: "red" }}>{err}</p>}
 
+      {/* Bảng sản phẩm */}
       {!loading && (
         <div style={{ overflowX: "auto", marginTop: 12 }}>
           <table

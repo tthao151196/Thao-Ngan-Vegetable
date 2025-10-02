@@ -1,8 +1,11 @@
-// src/main.jsx
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from "react-router-dom";
 import "./index.css";
+
+// ✅ import toast
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // ===== Customer pages =====
 import Home from "./pages/Customers/Home";
@@ -21,9 +24,13 @@ import AdminProducts from "./pages/Admin/Product/Products";
 import AdminCategories from "./pages/Admin/Category/Categories";
 import AdminOrders from "./pages/Admin/Order/Orders";
 import AdminUsers from "./pages/Admin/User/Users";
-import AddProduct from "./pages/Admin/Product/AddProduct"; // ✅ thêm import
-import EditProduct from "./pages/Admin/Product/EditProduct"; // ✅ thêm import
-
+import AddProduct from "./pages/Admin/Product/AddProduct";
+import EditProduct from "./pages/Admin/Product/EditProduct";
+import AddCategory from "./pages/Admin/Category/AddCategory";
+import LoginAdmin from "./pages/Admin/LoginAdmin"; // ✅ thêm login admin
+import AdminRoute from "./components/AdminRoute";   // ✅ bảo vệ route admin
+import OrderDetail from "./pages/Admin/Order/OrderDetail"; 
+import EditCategory from "./pages/Admin/Category/EditCategory"; // ✅ import
 
 // ---- Hàm logout (gọi API + xoá localStorage) ----
 const handleLogout = async () => {
@@ -46,7 +53,10 @@ const handleLogout = async () => {
   } finally {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-    window.location.href = "/login"; // chuyển về login
+    toast.info("👋 Bạn đã đăng xuất!");
+    setTimeout(() => {
+      window.location.href = "/login"; // chuyển về login customer
+    }, 1200);
   }
 };
 
@@ -123,7 +133,7 @@ function App() {
           )
         : [...prev, { ...product, qty: 1 }];
     });
-    alert("🎉 Sản phẩm đã được thêm vào giỏ hàng!");
+    toast.success("🎉 Sản phẩm đã được thêm vào giỏ hàng!");
   };
 
   return (
@@ -140,20 +150,36 @@ function App() {
         <Route path="/register" element={<Layout><Register /></Layout>} />
         <Route path="/login" element={<Layout><Login /></Layout>} />
 
-       {/* ====== Admin routes ====== */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
+        {/* ====== Admin login riêng ====== */}
+        <Route path="/admin/login" element={<LoginAdmin />} />
+        <Route path="/admin/orders/:id" element={<OrderDetail />} />
+
+        {/* ====== Admin routes (protected) ====== */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminLayout />
+            </AdminRoute>
+          }
+        >
+          <Route index element={<Dashboard />} />   {/* ✅ /admin = Dashboard */}
           <Route path="products" element={<AdminProducts />} />
           <Route path="products/add" element={<AddProduct />} />
-          <Route path="products/:id/edit" element={<EditProduct />} /> {/* ✅ thêm route EditProduct */}
+          <Route path="products/:id/edit" element={<EditProduct />} />
           <Route path="categories" element={<AdminCategories />} />
+          <Route path="categories/add" element={<AddCategory />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="categories/edit/:id" element={<EditCategory />} />
         </Route>
 
         {/* 404 */}
         <Route path="*" element={<Layout><div>Không tìm thấy trang</div></Layout>} />
       </Routes>
+
+      {/* ✅ Container cho thông báo */}
+      <ToastContainer position="top-right" autoClose={2000} />
     </BrowserRouter>
   );
 }

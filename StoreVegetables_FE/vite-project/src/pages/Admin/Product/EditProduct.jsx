@@ -16,19 +16,27 @@ export default function EditProduct() {
     category_id: "",
     brand_id: "",
     description: "",
-    thumbnail: null, // file upload
+    thumbnail: null,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // ==============================
   // Lấy dữ liệu sản phẩm + danh mục
+  // ==============================
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const token = localStorage.getItem("token"); // lấy token đã lưu
+
         const [resProd, resCats] = await Promise.all([
-          fetch(`${API_BASE}/products/${id}`),
-          fetch(`${API_BASE}/categories`),
+          fetch(`${API_BASE}/products/${id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
+          fetch(`${API_BASE}/categories`, {
+            headers: { Authorization: `Bearer ${token}` },
+          }),
         ]);
 
         if (!resProd.ok) throw new Error("Không tải được sản phẩm");
@@ -40,7 +48,7 @@ export default function EditProduct() {
         setForm({
           name: prod.name || "",
           price_root: prod.price_root || "",
-          price_sale: prod.price || "", // map từ API khách sang sale
+          price_sale: prod.price_sale || prod.price || "",
           qty: prod.qty || "",
           category_id: prod.category_id || "",
           brand_id: prod.brand_id || "",
@@ -58,6 +66,9 @@ export default function EditProduct() {
     fetchData();
   }, [id]);
 
+  // ==============================
+  // Handle input
+  // ==============================
   const onChange = (e) => {
     const { name, value, files } = e.target;
     if (files) {
@@ -67,15 +78,20 @@ export default function EditProduct() {
     }
   };
 
+  // ==============================
+  // Submit update
+  // ==============================
   const onSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
     setError("");
 
     try {
+      const token = localStorage.getItem("token"); // lấy token
+
       const formData = new FormData();
       formData.append("name", form.name);
-      formData.append("slug", form.name.toLowerCase().replace(/\s+/g, "-")); // tự sinh slug
+      formData.append("slug", form.name.toLowerCase().replace(/\s+/g, "-"));
       formData.append("price_root", form.price_root);
       formData.append("price_sale", form.price_sale);
       formData.append("qty", form.qty);
@@ -89,7 +105,10 @@ export default function EditProduct() {
 
       const res = await fetch(`${API_BASE}/admin/products/${id}`, {
         method: "POST",
-        headers: { Accept: "application/json" },
+        headers: {
+          Accept: "application/json",
+          Authorization: `Bearer ${token}`, // ✅ thêm token
+        },
         body: formData,
       });
 
@@ -109,6 +128,9 @@ export default function EditProduct() {
 
   if (loading) return <p className="p-4">Đang tải...</p>;
 
+  // ==============================
+  // UI Form
+  // ==============================
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white shadow rounded">
       <h1 className="text-2xl font-bold mb-4">✏️ Sửa sản phẩm</h1>

@@ -86,14 +86,39 @@ public function index(Request $request)
     return response()->json($orders);
 }
 
-    public function show(Order $order)
-    {
-        // trả về 1 đơn + chi tiết
-        $order->load(['details' /*, 'details.product' nếu có quan hệ product */])
-            ->loadSum('details as total', 'amount');
+ public function show($id)
+{
+    $order = Order::with(['details.product'])->findOrFail($id);
 
-        return response()->json($order);
-    }
+    $total = $order->details->sum(fn($d) => $d->amount ?? $d->price_buy * $d->qty);
+
+    return response()->json([
+        'id'         => $order->id,
+        'name'       => $order->name,
+        'email'      => $order->email,
+        'phone'      => $order->phone,
+        'address'    => $order->address,
+        'note'       => $order->note,
+        'status'     => (int)($order->status ?? 0),
+        'total'      => (float)$total,
+        'created_at' => $order->created_at,
+        'updated_at' => $order->updated_at,
+        'items'      => $order->details->map(function ($d) {
+            $p = $d->product;
+            return [
+                'id'            => $d->id,
+                'product_id'    => $d->product_id,
+                'product_name'  => $p?->name ?? 'Sản phẩm đã xoá',
+                'product_image' => $p?->thumbnail_url ?? $p?->thumbnail ?? null,
+                'price'         => (float)$d->price_buy,
+                'qty'           => (int)$d->qty,
+                'subtotal'      => (float)($d->amount ?? $d->price_buy * $d->qty),
+            ];
+        })->values(),
+    ]);
+}
+
+
 
 
 }

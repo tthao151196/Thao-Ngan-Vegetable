@@ -57,10 +57,14 @@ export default function AddProduct() {
         formData.append("thumbnail", form.thumbnail);
       }
 
+      // 👇 lấy token từ localStorage
+      const token = localStorage.getItem("token");
+
       const res = await fetch(`${API_BASE}/admin/products`, {
         method: "POST",
         headers: {
           Accept: "application/json",
+          Authorization: `Bearer ${token}`, // ✅ gửi kèm token
         },
         body: formData,
       });
@@ -150,32 +154,31 @@ export default function AddProduct() {
           </select>
         </div>
 
-     <div>
-  <label className="block mb-1 font-medium">Ảnh sản phẩm</label>
-  <input
-    type="file"
-    name="thumbnail"
-    accept="image/*"
-    onChange={onChange}
-    className="w-full border p-2 rounded"
-  />
+        <div>
+          <label className="block mb-1 font-medium">Ảnh sản phẩm</label>
+          <input
+            type="file"
+            name="thumbnail"
+            accept="image/*"
+            onChange={onChange}
+            className="w-full border p-2 rounded"
+          />
 
-  {/* Preview ảnh */}
-  <div className="mt-2">
-    {form.thumbnail ? (
-      <img
-        src={URL.createObjectURL(form.thumbnail)}
-        alt="Preview"
-        className="h-32 w-32 object-cover rounded border"
-      />
-    ) : (
-      <div className="h-32 w-32 flex items-center justify-center border rounded text-gray-400 text-sm">
-        Chưa chọn ảnh
-      </div>
-    )}
-  </div>
-</div>
-
+          {/* Preview ảnh */}
+          <div className="mt-2">
+            {form.thumbnail ? (
+              <img
+                src={URL.createObjectURL(form.thumbnail)}
+                alt="Preview"
+                className="h-32 w-32 object-cover rounded border"
+              />
+            ) : (
+              <div className="h-32 w-32 flex items-center justify-center border rounded text-gray-400 text-sm">
+                Chưa chọn ảnh
+              </div>
+            )}
+          </div>
+        </div>
 
         <div>
           <label className="block mb-1 font-medium">Mô tả</label>

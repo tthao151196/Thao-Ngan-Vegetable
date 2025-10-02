@@ -9,9 +9,9 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $table = 'uttt_order';   // ✅ tên bảng thật
-    protected $primaryKey = 'id';      // ✅ khóa chính
-    public $timestamps = true;         // có created_at, updated_at
+    protected $table = 'uttt_order';
+    protected $primaryKey = 'id';
+    public $timestamps = true;
 
     protected $fillable = [
         'user_id',
@@ -22,11 +22,20 @@ class Order extends Model
         'note',
         'status',
         'updated_by',
+        'total',
+        'payment_method',
+        'created_by',
     ];
 
-    // Quan hệ: 1 order có nhiều order detail
+    // Quan hệ tới OrderDetail
     public function details()
     {
-        return $this->hasMany(OrderDetail::class, 'order_id');
+        return $this->hasMany(OrderDetail::class, 'order_id', 'id');
+    }
+
+    // Nếu có user_id trong bảng order
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id', 'id');
     }
 }

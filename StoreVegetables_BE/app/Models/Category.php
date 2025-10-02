@@ -9,13 +9,17 @@ class Category extends Model
 {
     use HasFactory;
 
-    protected $table = 'uttt_category'; // ✅ trỏ đúng bảng trong DB
+    protected $table = 'uttt_category'; // ✅ đúng tên bảng trong DB
 
-    protected $fillable = ['name', 'slug', 'image', 'parent_id', 'sort_order', 'description'];
-
-    public function products()
-    {
-        return $this->hasMany(Product::class, 'category_id');
-    }
+    protected $fillable = [
+        'name',
+        'slug',
+        'image',
+        'parent_id',
+        'sort_order',
+        'description',
+        'created_by',
+        'updated_by',
+        'status',
+    ];
 }
-
