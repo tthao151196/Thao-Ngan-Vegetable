@@ -39,4 +39,12 @@ class User extends Authenticatable
             'password' => 'hashed',   // ✅ để tự hash khi create/update
         ];
     }
+
+
+
+    public function reviews()
+{
+    return $this->hasMany(Review::class, 'user_id');
+}
+
 }

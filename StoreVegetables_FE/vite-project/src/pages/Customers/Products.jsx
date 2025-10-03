@@ -271,7 +271,7 @@ export default function Products({ addToCart }) {
       >
         {filtered.length > 0 ? (
           filtered.map((p) => (
-            <div key={p.id} style={{ position: "relative" }}>
+            <div key={p.id} className="prod-item" style={{ position: "relative" }}>
               <ProductCard
                 p={{
                   ...p,
@@ -309,6 +309,49 @@ export default function Products({ addToCart }) {
       <p style={{ marginTop: 24, textAlign: "center" }}>
         <Link to="/" style={{ color: "#2e7d32" }}>← Về trang chủ</Link>
       </p>
+
+      {/* CSS hiệu ứng hover cho card, ảnh và nút +Giỏ */}
+      <style>{`
+        /* Hiệu ứng nổi lên khi hover card */
+        .prod-item {
+          transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+          will-change: transform, box-shadow, filter;
+        }
+        .prod-item:hover {
+          transform: translateY(-6px) scale(1.02);
+          box-shadow: 0 14px 30px rgba(0,0,0,0.15);
+          filter: saturate(1.05);
+        }
+
+        /* Tăng glow cho thẻ ProductCard bên trong */
+        .prod-item:hover .product-card {
+          box-shadow: 0 10px 28px rgba(0, 230, 118, 0.25), 0 2px 8px rgba(0,0,0,.08) !important;
+          border: 1px solid rgba(0, 230, 118, 0.35);
+        }
+
+        /* Ảnh zoom nhẹ và nghiêng rất nhỏ cho sống động */
+        .product-image img {
+          transition: transform .35s ease;
+        }
+        .prod-item:hover .product-image img {
+          transform: scale(1.06) rotate(-0.3deg);
+        }
+
+        /* Nút + Giỏ trượt lên nhẹ và có đổ bóng */
+        .prod-item > button {
+          transition: transform .25s ease, box-shadow .25s ease, opacity .25s ease;
+        }
+        .prod-item:hover > button {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(56,142,60,.35);
+        }
+
+        /* (Tuỳ chọn) hơi nâng badge giảm giá nếu có */
+        .prod-item:hover .product-image > div {
+          transform: translateY(-1px);
+          transition: transform .25s ease;
+        }
+      `}</style>
     </div>
   );
 }

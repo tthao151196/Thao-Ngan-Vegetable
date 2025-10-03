@@ -119,4 +119,46 @@ class AuthController extends Controller
         }
         return $username;
     }
+
+
+    public function adminLogin(Request $request)
+{
+    $data = $request->validate([
+      'email'    => ['required', 'email'],
+      'password' => ['required', 'string'],
+    ]);
+
+    if (!Auth::attempt($data)) {
+      return response()->json(['message' => 'Sai email hoặc mật khẩu'], 401);
+    }
+
+    /** @var \App\Models\User $user */
+    $user = Auth::user();
+
+    if ((int)$user->status !== 1) {
+      return response()->json(['message' => 'Tài khoản đã bị khóa'], 403);
+    }
+
+    if ($user->roles !== 'admin') {
+      return response()->json(['message' => 'Không có quyền admin'], 403);
+    }
+
+    // Token riêng cho admin
+    $token = $user->createToken('admin_token')->plainTextToken;
+
+    return response()->json([
+      'message' => 'Đăng nhập thành công',
+      'token'   => $token,
+      'user'    => [
+        'id'       => $user->id,
+        'name'     => $user->name,
+        'email'    => $user->email,
+        'phone'    => $user->phone,
+        'username' => $user->username,
+        'roles'    => $user->roles,
+        'status'   => $user->status,
+      ],
+    ]);
+}
+
 }

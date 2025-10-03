@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE = "http://127.0.0.1:8000/api";
-
+const PLACEHOLDER = "https://placehold.co/120x120?text=No+Image";
 export default function AddProduct() {
   const navigate = useNavigate();
 
@@ -165,19 +165,29 @@ export default function AddProduct() {
           />
 
           {/* Preview ảnh */}
-          <div className="mt-2">
-            {form.thumbnail ? (
-              <img
-                src={URL.createObjectURL(form.thumbnail)}
-                alt="Preview"
-                className="h-32 w-32 object-cover rounded border"
-              />
-            ) : (
-              <div className="h-32 w-32 flex items-center justify-center border rounded text-gray-400 text-sm">
-                Chưa chọn ảnh
-              </div>
-            )}
-          </div>
+         <div className="admin-upload-preview">
+  {form.thumbnail ? (
+    typeof form.thumbnail === "string" ? (
+      // Trường hợp sửa sản phẩm và đã có URL ảnh sẵn trong DB
+      <img
+        src={form.thumbnail}
+        alt="Preview"
+        className="admin-upload-image"
+        onError={(e) => (e.currentTarget.src = PLACEHOLDER)}
+      />
+    ) : (
+      // Trường hợp vừa chọn file từ <input type="file" />
+      <img
+        src={URL.createObjectURL(form.thumbnail)}
+        alt="Preview"
+        className="admin-upload-image"
+        onLoad={(e) => URL.revokeObjectURL(e.currentTarget.src)} // giải phóng blob sau khi load
+      />
+    )
+  ) : (
+    <div className="admin-upload-placeholder">Chua chon anh</div>
+  )}
+</div>
         </div>
 
         <div>
